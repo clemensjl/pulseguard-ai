@@ -1,163 +1,159 @@
 "use client";
 
 import React, { useState } from "react";
-import { DollarSign, TrendingUp, ShieldAlert, Sparkles, Check } from "lucide-react";
+import { Check, Sparkles } from "lucide-react";
+import Link from "next/link";
 
 export default function RoiCalculator() {
-  const [monthlyRevenue, setMonthlyRevenue] = useState(50000);
-  const [monthlyOutageMinutes, setMonthlyOutageMinutes] = useState(45);
-  const [engineerHourlyRate, setEngineerHourlyRate] = useState(120);
+  const [monthlyRevenue, setMonthlyRevenue] = useState(75000);
+  const [monthlyOutageMinutes, setMonthlyOutageMinutes] = useState(30);
+  const [engineerHourlyRate, setEngineerHourlyRate] = useState(140);
 
-  // Math calculations
   const revenuePerMinute = monthlyRevenue / (30 * 24 * 60);
   const directRevenueLoss = Math.round(revenuePerMinute * monthlyOutageMinutes);
-  const engineeringTriageCost = Math.round((monthlyOutageMinutes / 60) * engineerHourlyRate * 3); // 3 engineers on incident bridge
-  const customerChurnRisk = Math.round(monthlyRevenue * 0.035); // 3.5% churn risk on uncommunicated outages
-  const totalAnnualCost = (directRevenueLoss + engineeringTriageCost + customerChurnRisk) * 12;
+  const engineeringTriageCost = Math.round((monthlyOutageMinutes / 60) * engineerHourlyRate * 3);
+  const churnRisk = Math.round(monthlyRevenue * 0.025);
+  const totalAnnualOutageCost = (directRevenueLoss + engineeringTriageCost + churnRisk) * 12;
 
-  // PulseGuard AI savings (detects within 30s instead of 25m user report, auto post-mortems)
-  const pulseGuardAnnualCost = 29 * 12; // Pro tier
-  const estimatedSavings = Math.max(0, Math.round(totalAnnualCost * 0.85) - pulseGuardAnnualCost);
+  const estimatedAnnualSavings = Math.max(0, Math.round(totalAnnualOutageCost * 0.88) - 29 * 12);
 
   return (
-    <div className="w-full max-w-5xl mx-auto rounded-3xl bg-gradient-to-b from-slate-900 via-slate-900/90 to-slate-950 border border-slate-800 p-8 md:p-12 shadow-2xl relative overflow-hidden">
-      {/* Background radial highlight */}
-      <div className="absolute top-0 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-
-      <div className="text-center max-w-2xl mx-auto mb-10 space-y-3">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-semibold uppercase tracking-wider border border-emerald-500/20">
-          <Sparkles className="w-3.5 h-3.5" />
-          Interactive SaaS ROI Calculator
+    <div className="w-full max-w-5xl mx-auto rounded-3xl apple-card p-8 md:p-12 space-y-10">
+      <div className="text-center max-w-2xl mx-auto space-y-2.5">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.06] text-zinc-300 text-xs font-medium border border-white/[0.08]">
+          <Sparkles className="w-3.5 h-3.5 text-zinc-400" />
+          <span>Reliability Economics</span>
         </div>
-        <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
-          How Much Does 1 Outage Cost Your SaaS?
+        <h2 className="text-3xl md:text-4xl font-semibold text-white tracking-tight">
+          Calculate the Cost of Unmonitored Downtime
         </h2>
-        <p className="text-slate-400 text-sm md:text-base">
-          Unmonitored API errors bleed customer trust, churn subscriptions, and burn engineer triage hours. See your estimated annual savings with PulseGuard AI.
+        <p className="text-xs md:text-sm text-zinc-400">
+          Quantify transactional risk, customer churn exposure, and engineering triage overhead.
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-        {/* Sliders Column */}
-        <div className="lg:col-span-7 space-y-6 bg-slate-950/60 p-6 rounded-2xl border border-slate-800/80">
-          {/* Slider 1: Monthly Revenue */}
+        {/* Sliders */}
+        <div className="lg:col-span-7 space-y-6 bg-black/40 p-6 rounded-2xl border border-white/[0.06]">
+          {/* Slider 1 */}
           <div className="space-y-2">
-            <div className="flex justify-between items-center text-sm">
-              <label className="font-medium text-slate-300">Monthly Recurring Revenue (MRR)</label>
-              <span className="font-mono font-bold text-indigo-400">${monthlyRevenue.toLocaleString()}</span>
+            <div className="flex justify-between items-center text-xs">
+              <label className="font-medium text-zinc-300">Monthly Recurring Revenue (MRR)</label>
+              <span className="font-mono font-semibold text-white">${monthlyRevenue.toLocaleString()}</span>
             </div>
             <input
               type="range"
-              min="5000"
+              min="10000"
               max="500000"
               step="5000"
               value={monthlyRevenue}
               onChange={(e) => setMonthlyRevenue(Number(e.target.value))}
-              className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+              className="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-white"
             />
-            <div className="flex justify-between text-[11px] text-slate-400 font-mono">
-              <span>$5k/mo</span>
-              <span>$250k/mo</span>
-              <span>$500k/mo</span>
+            <div className="flex justify-between text-[10px] text-zinc-400 font-mono">
+              <span>$10,000</span>
+              <span>$250,000</span>
+              <span>$500,000</span>
             </div>
           </div>
 
-          {/* Slider 2: Average Monthly Outage / Degraded Time */}
+          {/* Slider 2 */}
           <div className="space-y-2">
-            <div className="flex justify-between items-center text-sm">
-              <label className="font-medium text-slate-300">Estimated Monthly Downtime (Minutes)</label>
-              <span className="font-mono font-bold text-amber-400">{monthlyOutageMinutes} mins / mo</span>
+            <div className="flex justify-between items-center text-xs">
+              <label className="font-medium text-zinc-300">Estimated Monthly Downtime</label>
+              <span className="font-mono font-semibold text-white">{monthlyOutageMinutes} minutes / mo</span>
             </div>
             <input
               type="range"
               min="5"
-              max="240"
+              max="180"
               step="5"
               value={monthlyOutageMinutes}
               onChange={(e) => setMonthlyOutageMinutes(Number(e.target.value))}
-              className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-amber-500"
+              className="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-white"
             />
-            <div className="flex justify-between text-[11px] text-slate-400 font-mono">
+            <div className="flex justify-between text-[10px] text-zinc-400 font-mono">
               <span>5 mins (99.99%)</span>
-              <span>60 mins (99.86%)</span>
-              <span>240 mins (99.4%)</span>
+              <span>45 mins (99.9%)</span>
+              <span>180 mins (99.5%)</span>
             </div>
           </div>
 
-          {/* Slider 3: Hourly Engineer Cost */}
+          {/* Slider 3 */}
           <div className="space-y-2">
-            <div className="flex justify-between items-center text-sm">
-              <label className="font-medium text-slate-300">Blended Engineer Hourly Cost</label>
-              <span className="font-mono font-bold text-slate-200">${engineerHourlyRate}/hr</span>
+            <div className="flex justify-between items-center text-xs">
+              <label className="font-medium text-zinc-300">Engineer Hourly Rate</label>
+              <span className="font-mono font-semibold text-white">${engineerHourlyRate}/hr</span>
             </div>
             <input
               type="range"
-              min="50"
+              min="60"
               max="300"
               step="10"
               value={engineerHourlyRate}
               onChange={(e) => setEngineerHourlyRate(Number(e.target.value))}
-              className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-slate-400"
+              className="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-white"
             />
           </div>
 
-          {/* Cost Breakdown Items */}
-          <div className="pt-4 border-t border-slate-800/80 grid grid-cols-3 gap-3 text-center">
-            <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800">
-              <span className="text-[11px] text-slate-400 block">Lost Transactions</span>
-              <span className="text-sm font-bold text-rose-400 font-mono">${(directRevenueLoss * 12).toLocaleString()}</span>
+          {/* 3 Metrics breakdown */}
+          <div className="pt-4 border-t border-white/[0.06] grid grid-cols-3 gap-2.5 text-center">
+            <div className="p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+              <span className="text-[10px] text-zinc-500 block">Lost Volume</span>
+              <span className="text-xs font-mono font-semibold text-zinc-200 mt-0.5 block">
+                ${(directRevenueLoss * 12).toLocaleString()}
+              </span>
             </div>
-            <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800">
-              <span className="text-[11px] text-slate-400 block">Engineering Triage</span>
-              <span className="text-sm font-bold text-amber-400 font-mono">${(engineeringTriageCost * 12).toLocaleString()}</span>
+            <div className="p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+              <span className="text-[10px] text-zinc-500 block">Engineer Triage</span>
+              <span className="text-xs font-mono font-semibold text-zinc-200 mt-0.5 block">
+                ${(engineeringTriageCost * 12).toLocaleString()}
+              </span>
             </div>
-            <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800">
-              <span className="text-[11px] text-slate-400 block">Churn Prevention</span>
-              <span className="text-sm font-bold text-indigo-400 font-mono">${(customerChurnRisk * 12).toLocaleString()}</span>
+            <div className="p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+              <span className="text-[10px] text-zinc-500 block">Churn Risk</span>
+              <span className="text-xs font-mono font-semibold text-zinc-200 mt-0.5 block">
+                ${(churnRisk * 12).toLocaleString()}
+              </span>
             </div>
           </div>
         </div>
 
         {/* Results Card */}
-        <div className="lg:col-span-5 rounded-2xl bg-gradient-to-br from-indigo-950/80 via-slate-900 to-slate-950 border border-indigo-500/30 p-6 md:p-8 space-y-6 shadow-xl relative">
+        <div className="lg:col-span-5 rounded-2xl bg-zinc-900/90 border border-white/[0.12] p-6 md:p-8 space-y-6 shadow-2xl relative">
           <div>
-            <span className="text-xs uppercase tracking-wider text-indigo-300 font-semibold block mb-1">
-              Estimated Annual Savings
+            <span className="text-[11px] font-medium uppercase tracking-wider text-zinc-400 block mb-1">
+              Estimated Net Annual Savings
             </span>
-            <div className="text-4xl md:text-5xl font-extrabold text-white tracking-tight flex items-baseline gap-1 font-mono">
-              <span className="text-emerald-400">${estimatedSavings.toLocaleString()}</span>
-              <span className="text-sm text-slate-400 font-normal">/ year</span>
+            <div className="text-4xl md:text-5xl font-semibold tracking-tight text-white font-mono">
+              ${estimatedAnnualSavings.toLocaleString()}
             </div>
-            <p className="text-xs text-slate-400 mt-2">
-              Based on 85% MTTR reduction with autonomous 30-sec synthetic polling and instant AI post-mortem root cause analysis.
+            <p className="text-xs text-zinc-400 mt-2">
+              Based on 88% Mean Time to Resolution (MTTR) improvement through automated 30s probes and instant RCA generation.
             </p>
           </div>
 
-          <div className="space-y-2.5 pt-2 border-t border-indigo-500/20 text-xs text-slate-300">
+          <div className="space-y-2 pt-2 border-t border-white/[0.08] text-xs text-zinc-300">
             <div className="flex items-center gap-2">
-              <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-              <span>30-second multi-region probe intervals</span>
+              <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <span>30-second multi-region probe consensus</span>
             </div>
             <div className="flex items-center gap-2">
-              <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-              <span>Instant Slack, Discord & Webhook paging</span>
+              <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <span>Sub-second alert dispatch (Slack / Webhooks)</span>
             </div>
             <div className="flex items-center gap-2">
-              <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-              <span>Automated AI post-mortem & incident timeline</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-              <span>Public hosted status page & badge embeds</span>
+              <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <span>Public white-label status page & badges</span>
             </div>
           </div>
 
-          <a
+          <Link
             href="/dashboard"
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold text-sm shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 transition-all block text-center"
+            className="apple-btn-primary w-full py-2.5 text-xs text-center block font-semibold"
           >
-            Start Monitoring for $0 Today
-          </a>
+            Start Free Monitoring
+          </Link>
         </div>
       </div>
     </div>
