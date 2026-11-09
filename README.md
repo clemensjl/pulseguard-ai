@@ -1,5 +1,7 @@
 # ⚡ PulseGuard AI — Autonomous Observability, API Monitoring & Status Pages
 
+Live demo: <https://pulseguard-ai-ten.vercel.app>. Monitors, incidents and plans in the dashboard run on seeded sample data stored in the browser.
+
 [![Uptime](https://img.shields.io/badge/Uptime-99.99%25-emerald?style=flat-square&logo=statuspage)](https://pulseguard-ai.vercel.app/status/demo)
 [![Next.js 15](https://img.shields.io/badge/Next.js-15.2-black?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
@@ -78,4 +80,4 @@ vercel deploy --prod
 
 ## 📄 License
 
-MIT © 2026 PulseGuard AI Systems.
+[MIT](LICENSE). Copyright (c) 2026 Clemens Jele. See [CONTRIBUTING.md](CONTRIBUTING.md) to contribute.
