@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { resolvePublicTarget, UnsafeTargetError } from "@/lib/safe-url";
+
+export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const targetUrl = searchParams.get("url");
-  const method = searchParams.get("method") || "GET";
+  const method = (searchParams.get("method") || "GET").toUpperCase() === "HEAD" ? "HEAD" : "GET";
   const expectedStatus = parseInt(searchParams.get("expectedStatus") || "200", 10);
   const keyword = searchParams.get("keyword");
 
@@ -11,9 +14,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Missing 'url' query parameter" }, { status: 400 });
   }
 
-  let formattedUrl = targetUrl.trim();
-  if (!/^https?:\/\//i.test(formattedUrl)) {
-    formattedUrl = `https://${formattedUrl}`;
+  let formattedUrl: string;
+  try {
+    formattedUrl = (await resolvePublicTarget(targetUrl)).url.toString();
+  } catch (err) {
+    const message = err instanceof UnsafeTargetError ? err.message : "Invalid target";
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 
   const startTime = performance.now();
@@ -24,6 +30,7 @@ export async function GET(request: NextRequest) {
     const response = await fetch(formattedUrl, {
       method,
       signal: controller.signal,
+      redirect: "manual",
       headers: {
         "User-Agent": "PulseGuard-Bot/1.0 (+https://pulseguard.io)",
         "Accept": "*/*",
