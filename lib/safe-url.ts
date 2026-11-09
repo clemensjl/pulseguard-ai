@@ -1,4 +1,5 @@
 import { lookup } from "node:dns/promises";
+import { Agent, fetch as undiciFetch } from "undici";
 import { isIP } from "node:net";
 
 // Blocks requests from the server to internal networks (SSRF).
@@ -73,4 +74,57 @@ export async function resolvePublicTarget(rawUrl: string): Promise<{ url: URL; a
     throw new UnsafeTargetError("Target resolves to a private or reserved address");
   }
   return { url, address: addresses[0].address };
+}
+
+// fetch that connects only to the address validated above (no second DNS lookup,
+// so DNS rebinding cannot swap in an internal IP) and re-validates every redirect hop.
+export async function safeFetch(
+  rawUrl: string,
+  init: RequestInit & { maxRedirects?: number } = {}
+): Promise<{ response: Response; finalUrl: string }> {
+  const { maxRedirects = 3, ...rest } = init;
+  let current = rawUrl;
+
+  for (let hop = 0; ; hop++) {
+    const { url, address } = await resolvePublicTarget(current);
+    const family = isIP(address);
+    const dispatcher = new Agent({
+      connect: {
+        lookup: (_hostname, options, callback) => {
+          if ((options as { all?: boolean }).all) {
+            (callback as (err: null, addrs: Array<{ address: string; family: number }>) => void)(null, [{ address, family }]);
+          } else {
+            callback(null, address, family);
+          }
+        },
+      },
+    });
+
+    try {
+      const response = (await undiciFetch(url.toString(), {
+        ...(rest as object),
+        redirect: "manual",
+        dispatcher,
+      })) as unknown as Response;
+
+      const location = response.headers.get("location");
+      if (response.status >= 300 && response.status < 400 && location && hop < maxRedirects) {
+        await response.body?.cancel();
+        current = new URL(location, url).toString();
+        continue;
+      }
+      // Read the body before the dispatcher is closed.
+      const body = await response.arrayBuffer();
+      return {
+        response: new Response(response.status === 204 || response.status === 304 ? null : body, {
+          status: response.status,
+          statusText: response.statusText,
+          headers: response.headers,
+        }),
+        finalUrl: url.toString(),
+      };
+    } finally {
+      dispatcher.close().catch(() => {});
+    }
+  }
 }

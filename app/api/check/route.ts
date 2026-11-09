@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { resolvePublicTarget, UnsafeTargetError } from "@/lib/safe-url";
+import { resolvePublicTarget, safeFetch, UnsafeTargetError } from "@/lib/safe-url";
 
 export const runtime = "nodejs";
 
@@ -27,10 +27,9 @@ export async function GET(request: NextRequest) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-    const response = await fetch(formattedUrl, {
+    const { response, finalUrl } = await safeFetch(formattedUrl, {
       method,
       signal: controller.signal,
-      redirect: "manual",
       headers: {
         "User-Agent": "PulseGuard-Bot/1.0 (+https://pulseguard.io)",
         "Accept": "*/*",
@@ -57,6 +56,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       ok,
       url: formattedUrl,
+      finalUrl,
       status: response.status,
       statusText: response.statusText,
       latencyMs: durationMs,
@@ -69,6 +69,9 @@ export async function GET(request: NextRequest) {
       keywordMatched: keyword ? keywordFound : undefined,
     });
   } catch (err: unknown) {
+    if (err instanceof UnsafeTargetError) {
+      return NextResponse.json({ error: `Redirect blocked: ${err.message}` }, { status: 400 });
+    }
     const durationMs = Math.round(performance.now() - startTime);
     const errorMessage = err instanceof Error ? err.message : "Connection failed";
     return NextResponse.json({

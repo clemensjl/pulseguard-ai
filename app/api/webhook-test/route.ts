@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { resolvePublicTarget, UnsafeTargetError } from "@/lib/safe-url";
+import { resolvePublicTarget, safeFetch, UnsafeTargetError } from "@/lib/safe-url";
 
 export const runtime = "nodejs";
 
@@ -45,9 +45,9 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      const response = await fetch(target, {
+      const { response } = await safeFetch(target, {
         method: "POST",
-        redirect: "manual",
+        maxRedirects: 0,
         headers: {
           "Content-Type": "application/json",
           "User-Agent": "PulseGuard-Webhook/1.0",

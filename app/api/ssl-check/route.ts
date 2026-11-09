@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import tls from "tls";
+import { isIP } from "node:net";
 import { resolvePublicTarget, UnsafeTargetError } from "@/lib/safe-url";
 
 export const runtime = "nodejs";
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest) {
         {
           host: address,
           port: 443,
-          servername: hostname,
+          servername: isIP(hostname) ? undefined : hostname,
           timeout: 6000,
         },
         () => {
