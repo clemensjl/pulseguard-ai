@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import tls from "tls";
+import { isIP } from "node:net";
+import { resolvePublicTarget, UnsafeTargetError } from "@/lib/safe-url";
 
 export const runtime = "nodejs";
 
@@ -11,15 +13,24 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Missing 'url' query parameter" }, { status: 400 });
   }
 
-  let hostname = targetUrl.replace(/^https?:\/\//i, "").split("/")[0].split(":")[0];
+  let hostname: string;
+  let address: string;
+  try {
+    const target = await resolvePublicTarget(targetUrl);
+    hostname = target.url.hostname;
+    address = target.address;
+  } catch (err) {
+    const message = err instanceof UnsafeTargetError ? err.message : "Invalid target";
+    return NextResponse.json({ ok: false, error: message }, { status: 400 });
+  }
 
   return new Promise<NextResponse>((resolve) => {
     try {
       const socket = tls.connect(
         {
-          host: hostname,
+          host: address,
           port: 443,
-          servername: hostname,
+          servername: isIP(hostname) ? undefined : hostname,
           timeout: 6000,
         },
         () => {

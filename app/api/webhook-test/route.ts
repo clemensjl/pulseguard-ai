@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { resolvePublicTarget, safeFetch, UnsafeTargetError } from "@/lib/safe-url";
+
+export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   try {
@@ -7,6 +10,14 @@ export async function POST(request: NextRequest) {
 
     if (!webhookUrl) {
       return NextResponse.json({ error: "Missing webhookUrl" }, { status: 400 });
+    }
+
+    let target: string;
+    try {
+      target = (await resolvePublicTarget(String(webhookUrl))).url.toString();
+    } catch (err) {
+      const message = err instanceof UnsafeTargetError ? err.message : "Invalid webhookUrl";
+      return NextResponse.json({ error: message }, { status: 400 });
     }
 
     // Build payload according to platform
@@ -34,8 +45,9 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      const response = await fetch(webhookUrl, {
+      const { response } = await safeFetch(target, {
         method: "POST",
+        maxRedirects: 0,
         headers: {
           "Content-Type": "application/json",
           "User-Agent": "PulseGuard-Webhook/1.0",
